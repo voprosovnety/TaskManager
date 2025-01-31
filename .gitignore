@@ -1,0 +1,8 @@
+__pychache__/
+*.pyc
+*.pyo
+*.sqlite
+*.db
+*.csv
+.idea/
+venv/
