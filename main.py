@@ -2,6 +2,7 @@ from database.db_manager import initialize_database, create_task, fetch_all_task
     fetch_tasks_by_status
 from utils.input_validation import get_task_input, get_task_update_input, get_task_id_input
 from utils.csv_handler import export_tasks_to_csv
+from utils.logger import log_message
 
 
 def handle_add_task():
@@ -11,6 +12,7 @@ def handle_add_task():
     title, description, due_date = get_task_input()
     create_task(title, description, due_date)
     print(f"\nTask '{title}' added successfully!")
+    log_message('info', f'New task added: {title}, Due: {due_date}')
 
 
 def handle_update_task_status():
@@ -19,7 +21,8 @@ def handle_update_task_status():
     """
     task_id, is_completed = get_task_update_input()
     update_task_status(task_id, is_completed)
-    print(f"Task with ID {task_id} updated successfully!")
+    print(f'Task with ID {task_id} updated successfully!')
+    log_message('info', f'Task ID {task_id} marked as {'Completed' if is_completed else 'Incomplete'}')
 
 
 def handle_delete_task():
@@ -29,6 +32,7 @@ def handle_delete_task():
     task_id = get_task_id_input()
     delete_task(task_id)
     print(f'Task with ID {task_id} has been deleted.')
+    log_message('warning', f'Task deleted: ID {task_id}')
 
 
 def handle_show_tasks():
@@ -100,10 +104,12 @@ def handle_export_tasks():
         print('Invalid choice. Returning to menu.')
         return
     export_tasks_to_csv(filename, tasks)
+    log_message('info', f'Tasks exported to {filename}')
 
 
 def main():
     initialize_database()
+    log_message('info', 'TaskManager started.')
 
     while True:
         print('\nMenu')
@@ -130,6 +136,7 @@ def main():
             handle_export_tasks()
         elif choice == '7':
             print('TaskManager is closing. Your data is safe. Goodbye!')
+            log_message('info', 'TaskManager closed.')
             break
         else:
             print('Invalid choice, try again.')
