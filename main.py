@@ -1,6 +1,7 @@
 from database.db_manager import initialize_database, create_task, fetch_all_tasks, update_task_status, delete_task, \
     fetch_tasks_by_status
 from utils.input_validation import get_task_input, get_task_update_input, get_task_id_input
+from utils.csv_handler import export_tasks_to_csv
 
 
 def handle_add_task():
@@ -75,6 +76,32 @@ def handle_filter_tasks_by_status():
             print('Invalid input. Please enter 0 or 1.')
 
 
+def handle_export_tasks():
+    """
+    Handles exporting tasks to a CSV file.
+    """
+    print('\nExport options:')
+    print('1. Export all tasks')
+    print('2. Export only completed tasks')
+    print('3. Export only incomplete tasks')
+
+    choice = input('Choose an option (1/2/3): ').strip()
+
+    if choice == '1':
+        tasks = fetch_all_tasks()
+        filename = 'data/tasks_export_all.csv'
+    elif choice == '2':
+        tasks = fetch_tasks_by_status(1)
+        filename = 'data/tasks_export_completed.csv'
+    elif choice == '3':
+        tasks = fetch_tasks_by_status(0)
+        filename = 'data/tasks_export_incomplete.csv'
+    else:
+        print('Invalid choice. Returning to menu.')
+        return
+    export_tasks_to_csv(filename, tasks)
+
+
 def main():
     initialize_database()
 
@@ -85,7 +112,8 @@ def main():
         print('3. Update task status')
         print('4. Delete a task')
         print('5. Filter tasks by status')
-        print('6. Exit')
+        print('6. Export tasks to CSV')
+        print('7. Exit')
         choice = input('Choose an option: ')
 
         if choice == '1':
@@ -99,6 +127,8 @@ def main():
         elif choice == '5':
             handle_filter_tasks_by_status()
         elif choice == '6':
+            handle_export_tasks()
+        elif choice == '7':
             print('TaskManager is closing. Your data is safe. Goodbye!')
             break
         else:
