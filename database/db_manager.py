@@ -80,21 +80,24 @@ def fetch_tasks_by_status(is_completed):
     return tasks
 
 
-def update_task_status(task_id, is_completed):
+def update_task(task_id, title, description, due_date, is_completed):
     """
-    Updates the completion status of a task.
+    Updates an existing task in the database.
 
     Args:
         task_id (int): The ID of the task to update.
+        title (str): The new title of the task.
+        description (str): The new description of the task.
+        due_date (str): The new due date in YYYY-MM-DD format.
         is_completed (int): The new status (0 for incomplete, 1 for complete).
     """
     conn = connect()
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE tasks
-        SET is_completed = ?
+        SET title = ?, description = ?, due_date = ?, is_completed = ?
         WHERE id = ?
-    ''', (is_completed, task_id))
+    ''', (title, description, due_date, is_completed, task_id))
     conn.commit()
     conn.close()
 
@@ -111,3 +114,19 @@ def delete_task(task_id):
     cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
     conn.commit()
     conn.close()
+
+
+def fetch_task_by_id(task_id):
+    """
+    Fetch a task by id
+
+    Args:
+        task_id (int): The ID of the task to fetch
+    """
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = cursor.fetchone()
+    conn.close()
+    return task
+
