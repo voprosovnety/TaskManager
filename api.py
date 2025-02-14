@@ -5,7 +5,6 @@ from utils.api_logger import log_api_request
 
 app = FastAPI()
 
-router=APIRouter()
 
 @app.get('/tasks')
 def get_tasks():
@@ -25,9 +24,15 @@ class TaskCreate(BaseModel):
 
 
 @app.post('/tasks')
-def add_task(task: TaskCreate):
+async def add_task(task: TaskCreate):
     """
     Add a new task to the database
+
+    Args:
+        task (TaskCreate): The task data including title, description, and due date.
+
+    Returns:
+        dict: Confirmation message.
     """
     try:
         create_task(task.title, task.description, task.due_date)
