@@ -7,7 +7,8 @@ logging.basicConfig(
     encoding='utf-8'
 )
 
-def log_api_request(endpoint: str,method:str,status_code:int):
+
+def log_api_request(endpoint: str, method: str, status_code: int):
     """
     Log API request details.
 
@@ -17,5 +18,3 @@ def log_api_request(endpoint: str,method:str,status_code:int):
         status_code (int): The response status code (e.g., 200, 400, 500).
     """
     logging.info(f'API Request: {method} {endpoint} - Status: {status_code}')
-
-

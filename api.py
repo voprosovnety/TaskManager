@@ -2,21 +2,10 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Request, Query
 from database.db_manager import fetch_all_tasks, create_task, delete_task, fetch_tasks_by_status, \
     fetch_task_by_id, update_task
-from utils.api_logger import log_api_request
-from datetime import datetime
+from utils.logger import log_api_request
+from utils.validators import validate_due_date
 
 app = FastAPI()
-
-
-def validate_due_date(value: str) -> str:
-    """
-    Validates that the provided due date is in the correct format and is a real date.
-    """
-    try:
-        datetime.strptime(value, '%Y-%m-%d')
-    except ValueError:
-        raise ValueError('Invalid date format. Please use YYYY-MM-DD.')
-    return value
 
 
 @app.get('/tasks')
