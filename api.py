@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, APIRouter
 from database.db_manager import fetch_all_tasks, create_task, update_task_status, delete_task, fetch_tasks_by_status
 from pydantic import BaseModel
+from utils.api_logger import log_api_request
 
 app = FastAPI()
 
+router=APIRouter()
 
 @app.get('/tasks')
 def get_tasks():
@@ -59,3 +61,20 @@ def get_tasks_by_status(is_completed: bool):
     """
     tasks = fetch_tasks_by_status(int(is_completed))
     return {'tasks': tasks}
+
+
+@app.middleware('http')
+async def log_requests(request: Request, call_next):
+    """
+    Middleware to log all incoming HTTP requests.
+
+    Args:
+        request (Request): The incoming HTTP request.
+        call_next: A function that processes the request and returns a response.
+
+    Returns:
+        Response: The HTTP response after processing the request.
+    """
+    response = await call_next(request)
+    log_api_request(request.url.path, request.method, response.status_code)
+    return response
