@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, Request, APIRouter
+from fastapi import FastAPI, HTTPException, Request
 from database.db_manager import fetch_all_tasks, create_task, update_task_status, delete_task, fetch_tasks_by_status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from utils.api_logger import log_api_request
+from datetime import datetime
 
 app = FastAPI()
 
@@ -18,9 +19,20 @@ def get_tasks():
 
 
 class TaskCreate(BaseModel):
-    title: str
-    description: str
-    due_date: str
+    title: str = Field(..., min_length=1, max_length=100, description='Task title (1-100 characters)')
+    description: str = Field(None, max_length=500, description='Optional task description (max 500 characters)')
+    due_date: str = Field(..., description='Due date in format YYYY-MM-DD')
+
+    @field_validator('due_date')
+    def validate_due_date(self, value: str) -> str:
+        """
+        Validates that the provided due date is in the correct format and is a real date.
+        """
+        try:
+            datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError('Invalid date format. Please use YYYY-MM-DD.')
+        return value
 
 
 @app.post('/tasks')
