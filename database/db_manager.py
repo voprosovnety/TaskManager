@@ -75,7 +75,7 @@ def fetch_all_tasks():
     Returns:
         list: A list of all tasks as tuples.
     """
-    execute_query('SELECT * FROM tasks')
+    return execute_query('SELECT * FROM tasks', fetch_all=True)
 
 
 def fetch_tasks_by_status(is_completed):
@@ -88,7 +88,7 @@ def fetch_tasks_by_status(is_completed):
     Returns:
         list: A list of tasks matching the status.
     """
-    execute_query('SELECT * FROM tasks WHERE tasks.is_completed = ?', (is_completed,))
+    return execute_query('SELECT * FROM tasks WHERE tasks.is_completed = ?', (is_completed,), fetch_all=True)
 
 
 def update_task(task_id, title, description, due_date, is_completed):
@@ -126,4 +126,4 @@ def fetch_task_by_id(task_id):
     Args:
         task_id (int): The ID of the task to fetch
     """
-    execute_query('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    return execute_query('SELECT * FROM tasks WHERE id = ?', (task_id,), fetch_one=True)

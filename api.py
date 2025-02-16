@@ -75,6 +75,8 @@ async def update_task_api(
     description = description if description is not None else existing_task[2]
     if due_date is not None:
         due_date = validate_due_date(due_date)
+    else:
+        due_date = existing_task[3]
     is_completed = is_completed if is_completed is not None else existing_task[4]
 
     update_task(task_id, title, description, due_date, is_completed)
@@ -97,7 +99,9 @@ def get_tasks_by_status(is_completed: bool):
     Retrieves tasks filtered by completion status.
     """
     tasks = fetch_tasks_by_status(int(is_completed))
-    return {'tasks': tasks}
+    return {
+        "tasks": [{"id": t[0], "title": t[1], "description": t[2], "due_date": t[3], "is_completed": bool(t[4])} for t
+                  in tasks]}
 
 
 @app.middleware('http')

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def validate_due_date(value: str) -> str:
     """
     Validates that the provided due date is in the correct format and is a real date.
