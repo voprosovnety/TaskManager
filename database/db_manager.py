@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from utils.logger import log_api_request
+from utils.logger import log_api_request, log_event
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, '../data/tasks.db')
@@ -11,31 +11,30 @@ def connect():
     return sqlite3.connect(DB_PATH)
 
 
-def execute_query(query, params=(), fetch_one=False, fetch_all=False):
+def execute_query(query, params=(), fetch_mode=None):
     """
     Executes an SQL query safely with automatic connection handling.
 
     Args:
         query (str): SQL query.
         params (tuple): Parameters for the query.
-        fetch_one (bool): If True, fetch a single result.
-        fetch_all (bool): If True, fetch all results.
+        fetch_mode (str | None): Can be 'one' (fetch one) or 'all' (fetch all).
 
     Returns:
-        Any: Query result if fetch_one or fetch_all is True, otherwise None.
+        Any: Query result if fetch_mode is set, otherwise None.
     """
     try:
         with connect() as conn:
             cursor = conn.cursor()
             cursor.execute(query, params)
             conn.commit()
-            if fetch_one:
+            if fetch_mode == 'one':
                 return cursor.fetchone()
-            if fetch_all:
+            if fetch_mode == 'all':
                 return cursor.fetchall()
-    except Exception as e:
-        log_api_request("DATABASE_ERROR", "EXECUTE", 500)
-        raise e
+    except sqlite3.Error as e:
+        log_event('DATABASE_ERROR', f'Query: {query} | Error: {e}')
+        raise RuntimeError(f'Database error: {e}')
 
 
 def initialize_database():
@@ -68,27 +67,35 @@ def create_task(title, description, due_date):
     ''', (title, description, due_date))
 
 
-def fetch_all_tasks():
+def fetch_tasks(is_completed=None, from_date=None, to_date=None):
     """
-    Fetches all tasks from the database.
-
-    Returns:
-        list: A list of all tasks as tuples.
-    """
-    return execute_query('SELECT * FROM tasks', fetch_all=True)
-
-
-def fetch_tasks_by_status(is_completed):
-    """
-    Fetches tasks filtered by their completion status.
+    Fetches all tasks, with optional filtering by completion status and due date range.
 
     Args:
-        is_completed (int): The status to filter by (0 for incomplete, 1 for complete).
+        is_completed (Optional[int]): If provided, filters tasks by status (0 or 1).
+        from_date (Optional[str]): The start date (YYYY-MM-DD) for filtering tasks.
+        to_date (Optional[str]): The end date (YYYY-MM-DD) for filtering tasks.
 
     Returns:
-        list: A list of tasks matching the status.
+        list: A list of tasks.
     """
-    return execute_query('SELECT * FROM tasks WHERE tasks.is_completed = ?', (is_completed,), fetch_all=True)
+    query = 'SELECT * FROM tasks'
+    params = []
+
+    if is_completed is not None:
+        query += ' WHERE is_completed = ?'
+        params.append(is_completed)
+
+    if from_date and to_date:
+        query += ' AND due_date BETWEEN ? AND ?'
+        params.extend([from_date, to_date])
+    elif from_date:
+        query += ' AND due_date >= ?'
+        params.append(from_date)
+    elif to_date:
+        query += ' AND due_date <= ?'
+        params.append(to_date)
+    return execute_query(query, tuple(params), fetch_mode='all')
 
 
 def update_task(task_id, title, description, due_date, is_completed):
@@ -126,4 +133,4 @@ def fetch_task_by_id(task_id):
     Args:
         task_id (int): The ID of the task to fetch
     """
-    return execute_query('SELECT * FROM tasks WHERE id = ?', (task_id,), fetch_one=True)
+    return execute_query('SELECT * FROM tasks WHERE id = ?', (task_id,), fetch_mode='one')

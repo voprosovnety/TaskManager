@@ -8,13 +8,24 @@ logging.basicConfig(
 )
 
 
-def log_api_request(endpoint: str, method: str, status_code: int):
+def log_event(event_type: str, message: str):
     """
-    Log API request details.
+    Logs various system events, including API requests and database errors.
 
     Args:
-        endpoint (str): The URL of the endpoint.
-        method (str): The HTTP method (GET, POST, DELETE, etc.).
-        status_code (int): The response status code (e.g., 200, 400, 500).
+        event_type (str): The type of event (e.g., 'API_REQUEST', 'DATABASE_ERROR').
+        message (str): A descriptive message of the event.
     """
-    logging.info(f'API Request: {method} {endpoint} - Status: {status_code}')
+    logging.info(f'[{event_type}] {message}')
+
+
+def log_api_request(endpoint: str, method: str, status_code: int):
+    """
+    Logs HTTP API requests, including their method, endpoint, and response status.
+
+    Args:
+        endpoint (str): The API endpoint URL being accessed.
+        method (str): The HTTP method used (GET, POST, DELETE, etc.).
+        status_code (int): The HTTP response status code.
+    """
+    log_event('API Request', f'{method} {endpoint} - Status: {status_code}')

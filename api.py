@@ -1,22 +1,36 @@
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request, Query
-from database.db_manager import fetch_all_tasks, create_task, delete_task, fetch_tasks_by_status, \
-    fetch_task_by_id, update_task
+from database.db_manager import fetch_tasks, create_task, delete_task, fetch_task_by_id, update_task
 from utils.logger import log_api_request
+from utils.utils import format_tasks
 from utils.validators import validate_due_date
 
 app = FastAPI()
 
 
 @app.get('/tasks')
-def get_tasks():
+def get_tasks(
+        is_completed: Optional[bool] = None,
+        from_date: Optional[str] = Query(None, description='Filter tasks from this date (YYYY-MM-DD)'),
+        to_date: Optional[str] = Query(None, description='Filter tasks to this date (YYYY-MM-DD)')
+):
     """
-    Get all tasks from the database
+    Retrieve tasks with optional filtering by completion status and due date range.
+
+    Args:
+        is_completed (Optional[bool]): Filter by task completion status.
+        from_date (Optional[str]): Filter tasks starting from this date (YYYY-MM-DD).
+        to_date (Optional[str]): Filter tasks up to this date (YYYY-MM-DD).
+
+    Returns:
+        dict: List of filtered tasks.
     """
-    tasks = fetch_all_tasks()
-    return {
-        "tasks": [{"id": t[0], "title": t[1], "description": t[2], "due_date": t[3], "is_completed": bool(t[4])} for t
-                  in tasks]}
+    if from_date:
+        from_date = validate_due_date(from_date)
+    if to_date:
+        to_date = validate_due_date(to_date)
+    tasks = fetch_tasks(int(is_completed), from_date, to_date)
+    return {'tasks': format_tasks(tasks)}
 
 
 @app.post('/tasks', summary='Add Task')
@@ -91,17 +105,6 @@ def delete_task_api(task_id: int):
     """
     delete_task(task_id)
     return {'message': f'Task {task_id} has been deleted'}
-
-
-@app.get('/tasks/status/{is_completed}')
-def get_tasks_by_status(is_completed: bool):
-    """
-    Retrieves tasks filtered by completion status.
-    """
-    tasks = fetch_tasks_by_status(int(is_completed))
-    return {
-        "tasks": [{"id": t[0], "title": t[1], "description": t[2], "due_date": t[3], "is_completed": bool(t[4])} for t
-                  in tasks]}
 
 
 @app.middleware('http')
